@@ -120,37 +120,38 @@ class GelismisStokUygulamasi(ctk.CTk):
         self.tree.bind("<<TreeviewSelect>>", self.tablodan_sec)
 
     # ==========================================
-    # BARKOD OLUŞTURMA & GÖSTERME METODU
+    # DÜZELTİLMİŞ BARKOD METODU
     # ==========================================
     def barkod_olustur_ve_goster(self, urun_kodu):
-        """Sadece Barkod Çizgileri ve Altında Numarası Olacak Şekilde Üretir."""
+        """Barkodu sadece çizgi ve altında numara olacak şekilde üretir."""
         if not urun_kodu:
             return
 
         try:
-            # Code128 formatı seçiliyor
+            dosya_adi = f"barkod_{urun_kodu}"
+            img_path = f"{dosya_adi}.png"
+
+            # Code128 Barkod Yapılandırması
             COD128 = barcode.get_barcode_class('code128')
             
-            # Yazar ayarlarında sadece barkod ve numarasının görünmesini sağlıyoruz
+            # Sadece geçerli python-barcode opsiyonları
             options = {
-                'write_text': True,   # Altına barkod numarasını yaz
-                'module_width': 0.2,  # Çizgi kalınlığı
-                'module_height': 8.0, # Barkod yüksekliği
-                'font_size': 10,      # Altındaki numara yazı boyutu
-                'text_distance': 3.0, # Numarayla çizgiler arası mesafe
-                'quiet_zone': 2.0     # Kenar boşlukları
+                'write_text': True,     # Sadece ürün kodunun numarasını çizer
+                'module_width': 0.25,   # Çizgi kalınlığı
+                'module_height': 10.0,  # Çizgi yüksekliği
+                'font_size': 10,        # Numara yazı boyutu
+                'text_distance': 3.5,   # Numarayla çizgi arası mesafe
+                'quiet_zone': 2.0       # Kenar boşlukları
             }
 
             barkod_obj = COD128(str(urun_kodu), writer=ImageWriter())
-            dosya_adi = f"barkod_{urun_kodu}"
             barkod_obj.save(dosya_adi, options=options)
 
-            # Görseli Yükle ve Arayüzde Göster
-            img_path = f"{dosya_adi}.png"
-            pil_img = Image.open(img_path)
-            ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(220, 90))
+            # Görseli kilitlenme (file locking) olmadan yükleyip göster
+            with Image.open(img_path) as pil_img:
+                ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(230, 95))
+                self.lbl_barkod_resim.configure(image=ctk_img, text="")
 
-            self.lbl_barkod_resim.configure(image=ctk_img, text="")
         except Exception as e:
             messagebox.showerror("Barkod Hatası", f"Barkod oluşturulamadı: {e}")
 
