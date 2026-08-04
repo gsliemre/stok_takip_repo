@@ -123,22 +123,32 @@ class GelismisStokUygulamasi(ctk.CTk):
     # BARKOD OLUŞTURMA & GÖSTERME METODU
     # ==========================================
     def barkod_olustur_ve_goster(self, urun_kodu):
-        """Verilen ürün koduna ait barkod resmi oluşturur ve üst orta alana basar."""
+        """Sadece Barkod Çizgileri ve Altında Numarası Olacak Şekilde Üretir."""
         if not urun_kodu:
             return
 
         try:
-            # Code128 Barkod Yapısı Oluştur
+            # Code128 formatı seçiliyor
             COD128 = barcode.get_barcode_class('code128')
-            barkod_obj = COD128(str(urun_kodu), writer=ImageWriter())
             
-            dosya_adi = f"barkod_{urun_kodu}"
-            barkod_obj.save(dosya_adi)  # "barkod_12345.png" kaydeder
+            # Yazar ayarlarında sadece barkod ve numarasının görünmesini sağlıyoruz
+            options = {
+                'write_text': True,   # Altına barkod numarasını yaz
+                'module_width': 0.2,  # Çizgi kalınlığı
+                'module_height': 8.0, # Barkod yüksekliği
+                'font_size': 10,      # Altındaki numara yazı boyutu
+                'text_distance': 3.0, # Numarayla çizgiler arası mesafe
+                'quiet_zone': 2.0     # Kenar boşlukları
+            }
 
-            # Görseli Yükle ve CTkLabel İçinde Göster
+            barkod_obj = COD128(str(urun_kodu), writer=ImageWriter())
+            dosya_adi = f"barkod_{urun_kodu}"
+            barkod_obj.save(dosya_adi, options=options)
+
+            # Görseli Yükle ve Arayüzde Göster
             img_path = f"{dosya_adi}.png"
             pil_img = Image.open(img_path)
-            ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(250, 80))
+            ctk_img = ctk.CTkImage(light_image=pil_img, dark_image=pil_img, size=(220, 90))
 
             self.lbl_barkod_resim.configure(image=ctk_img, text="")
         except Exception as e:
